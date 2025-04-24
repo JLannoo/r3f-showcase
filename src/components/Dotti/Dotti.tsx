@@ -1,10 +1,26 @@
-import { useFrame } from "@react-three/fiber";
-import gsap from "gsap";
-import { folder, useControls } from "leva";
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Mesh } from "three";
+import gsap from "gsap";
+
+import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
+import { folder, useControls } from "leva";
+
+import { useDottiSpeech } from "../../stores/useDottiSpeech";
 
 export default function Dotti() {
+    const text = useDottiSpeech((state) => state.partialText);
+    const speak = useDottiSpeech((state) => state.speak);
+
+    useEffect(() => {
+        const intro = async () => {
+            await speak("Hello! I'm Dotti.", { waitEnd: 1000 });            
+            await speak("Welcome to my world!");
+        }   
+
+        intro();
+    }, []);
+
     const controls = useControls('Dotti', {
         "Geometry": folder({
             segments: 8,
@@ -125,6 +141,29 @@ export default function Dotti() {
                 <ringGeometry args={[0.1, 0.15, controls.segments]} />
                 <meshStandardMaterial color={controls.color} wireframe/>
             </mesh>
+
+            <Speech text={text}/>
         </group>
     )
 };
+
+type SpeechProps = {
+    text: string;
+};
+
+function Speech({ text }: SpeechProps) {
+    return (
+        <Text font="/fonts/SpaceMono-Regular.ttf" 
+            fontSize={0.5} 
+            color="#ffffff" 
+            anchorX="center" 
+            anchorY="middle" 
+            textAlign="center"
+            position={[0, 1.5, 0]}
+            maxWidth={8}
+        >
+            {text}
+            <meshStandardMaterial color="#ffffff" />
+        </Text>
+    )
+}
