@@ -34,7 +34,7 @@ export default function Index() {
 			<Background />
 
             <PerspectiveCamera position={[0, 0, 6]} makeDefault />
-            <OrbitControls  />
+            <OrbitControls enableRotate={false} enablePan={false} maxDistance={7} minDistance={5}/>
 
             <Effects />
 

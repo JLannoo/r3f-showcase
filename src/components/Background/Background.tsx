@@ -94,18 +94,11 @@ export default function Background() {
         <group position={[0, 0, -10]}>
             <mesh position={[0, 0, 0]}>
                 <planeGeometry args={[25, 25]} />
-                <meshBasicMaterial
-                    color={controls.backgroundColor}
-                    side={2} // Double side
-                />
+                <meshBasicMaterial color={controls.backgroundColor}/>
             </mesh>
             <mesh position={[0, 0, 0.01]}>
                 <planeGeometry args={[25, 25]} />
-                <meshBasicMaterial
-                    map={texture}
-                    transparent={true}
-                    side={2} // Double side
-                />
+                <meshBasicMaterial map={texture} transparent={true}/>
             </mesh>
         </group>
     );
