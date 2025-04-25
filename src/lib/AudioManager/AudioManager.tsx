@@ -66,7 +66,7 @@ class AudioManager {
     }
 
     public isAbleToPlay() {        
-        return !this.isMuted && this.audioContext.state === 'running';
+        return this.audioContext.state === 'running';
     }
 
     public resume() {

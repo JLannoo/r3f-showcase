@@ -19,6 +19,7 @@ interface DottiSpeechStore {
 
     speak: (text: string, options?: SpeechOptions) => Promise<void>;
     wait: (ms: number) => Promise<void>;
+    mute: () => void;
 }
 
 export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
@@ -39,10 +40,9 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
                 window.addEventListener("click", async () => {
                     // Start post-interaction
                     await AudioManager.resume();
-                    set({ partialText: "", canSpeak: true });
-                    
                     await get().speak(text, {...options, waitStart: 0 });
 
+                    // Once user interaction and original call is done
                     resolve();
                 }, { once: true });
                 return;
@@ -89,6 +89,10 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
                 resolve();
             }, ms);
         });
+    },
+    mute: () => {
+        AudioManager.mute();
+        set({ canSpeak: false });
     },
 }));
 
