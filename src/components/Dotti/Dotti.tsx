@@ -122,6 +122,25 @@ export default function Dotti() {
         });
     }
 
+    function appear() {
+        gsap.fromTo(groupRef.current.scale, {
+            duration: 1,
+            x: 0,
+            y: 0,
+            z: 0,
+        }, {
+            duration: 1,
+            x: 1,
+            y: 1,
+            z: 1,
+            ease: 'elastic.out(1, 0.5)',
+        });
+    }
+
+    useEffect(() => {
+        appear();
+    }, []);
+
     return (
         <group ref={groupRef}>
             <mesh>
