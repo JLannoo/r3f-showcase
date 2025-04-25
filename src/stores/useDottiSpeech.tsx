@@ -1,4 +1,7 @@
+import { createRef, RefObject } from "react";
 import { create } from "zustand";
+import { Mesh } from "three";
+import gsap from "gsap";
 
 import AudioManager from "../lib/AudioManager/AudioManager";
 
@@ -15,6 +18,7 @@ interface DottiSpeechStore {
     fullText: string;
     interval: number | null;
     speed: number;
+    shakeRef: RefObject<Mesh | null>;
 
 
     speak: (text: string, options?: SpeechOptions) => Promise<void>;
@@ -30,6 +34,7 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
     interval: null,
     speed: 100,
     queue: [],
+    shakeRef: createRef(),
 
     speak: async (text: string, options?: SpeechOptions) => {
         return new Promise<void>(async (resolve) => {
@@ -64,6 +69,7 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
                 const state = get();
                 if (state.partialText.length < text.length) {
                     AudioManager.playEffect("DOTTI_SPEECH");
+                    shake(state.shakeRef, 0.2, 0.1);
                     set({ partialText: state.partialText + text[state.partialText.length] });
                 } else {
                     // End
@@ -95,4 +101,24 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
         set({ canSpeak: false });
     },
 }));
+
+function shake(ref: RefObject<Mesh | null>, duration: number = 0.1, intensity: number = 0.1) {
+    if(ref.current) {
+        const originalPosition = ref.current.position.clone();
+        gsap.to(ref.current.position, {
+            x: Math.random() * intensity - 0.05,
+            y: Math.random() * intensity - 0.05,
+            z: Math.random() * intensity - 0.05,
+            duration: duration/2,
+            ease: "power3.out",
+        });
+        gsap.to(ref.current.position, {
+            x: originalPosition.x,
+            y: originalPosition.y,
+            z: originalPosition.z,
+            duration: duration/2,
+            ease: "power3.out",
+        });
+    }
+}
 

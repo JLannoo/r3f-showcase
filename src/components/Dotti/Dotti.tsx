@@ -11,6 +11,7 @@ import { useDottiSpeech } from "../../stores/useDottiSpeech";
 export default function Dotti() {
     const text = useDottiSpeech((state) => state.partialText);
     const speak = useDottiSpeech((state) => state.speak);
+    const shakeRef = useDottiSpeech((state) => state.shakeRef);
 
     useEffect(() => {
         const intro = async () => {
@@ -143,7 +144,7 @@ export default function Dotti() {
 
     return (
         <group ref={groupRef}>
-            <mesh>
+            <mesh ref={shakeRef}>
                 <sphereGeometry args={[controls.radius, controls.segments, controls.segments]}/>
                 <meshStandardMaterial 
                     color={controls.color} 
