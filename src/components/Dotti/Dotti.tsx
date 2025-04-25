@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Mesh } from "three";
 import gsap from "gsap";
 
@@ -83,17 +83,17 @@ export default function Dotti() {
     };
 
     // Calculate positions for the eyes using polar coordinates
-    const eye1Position = polarToCartesian(
+    const eye1Position = useMemo(() => polarToCartesian(
         controls.radius,
         Math.PI / 2 - controls.eyeHeight,
         -controls.eyeSpacing + Math.PI / 2
-    );
+    ), [controls.eyeHeight, controls.eyeSpacing]);
 
-    const eye2Position = polarToCartesian(
+    const eye2Position = useMemo(() => polarToCartesian(
         controls.radius,
         Math.PI / 2 - controls.eyeHeight,
         controls.eyeSpacing + Math.PI / 2
-    );
+    ), [controls.eyeHeight, controls.eyeSpacing]);
 
     function blink() {
         gsap.to(eye1Ref.current.scale, {
