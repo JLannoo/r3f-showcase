@@ -77,8 +77,8 @@ export default function Background() {
     useEffect(() => {
         const newTexture = renderToTexture(
             text,
-            window.innerWidth,
-            window.innerHeight,
+            512,
+            512,
             controls.characterRows,
             controls.characterCols,
             controls.textColor,
