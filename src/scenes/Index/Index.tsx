@@ -1,14 +1,15 @@
-import { Canvas, ThreeEvent, useFrame, useThree } from '@react-three/fiber';
-import { useControls, folder } from 'leva';
+import { useEffect, useRef, useState } from 'react';
+import { Mesh } from 'three';
+import gsap from 'gsap';
 
-import { OrbitControls, PerspectiveCamera, Text } from '@react-three/drei';
-import { EffectComposer, Bloom, Noise, Scanline } from '@react-three/postprocessing';
+import { useControls } from 'leva';
+import { Html, Text } from '@react-three/drei';
+import { ThreeEvent, useFrame } from '@react-three/fiber';
 
 import Dotti from '../../components/Dotti/Dotti';
-import { useRef, useState } from 'react';
-import gsap from 'gsap';
-import { Mesh } from 'three';
-import Background from '../../components/Background/Background';
+import { Scene, useSceneNavigation } from '../../stores/useSceneNavigation';
+import DottiMonitor from '../../components/Dotti/DottiMonitor';
+import { log } from 'three/webgpu';
 
 const BUTTONS = [
     { label: "Button 1", action: () => console.log('Button 1 clicked') },
@@ -17,65 +18,15 @@ const BUTTONS = [
     { label: "Button 4", action: () => console.log('Button 4 clicked') },
 ]
 
-export default function Index() {
-    const lighting = useControls('Lighting', {
-        ambientLight: folder({
-            intensity: 5,
-        }, { collapsed: true }),
-    }, { collapsed: true });
-
-
+function Index() {
     return (
-        <Canvas style={{ height: '100vh', width: '100vw' }}>
-            <ambientLight intensity={lighting.intensity} />
-            <pointLight position={[10, 10, 10]} />
-
-
-			<Background />
-
-            <PerspectiveCamera position={[0, 0, 6]} makeDefault />
-            <OrbitControls  enableRotate={false} enablePan={false} maxDistance={7} minDistance={5}/>
-
-            <Effects />
-
+        <>
+            <Html fullscreen style={{ pointerEvents: 'none' }}>
+                <DottiMonitor />
+            </Html>
             <Dotti />
             <Buttons />
-        </Canvas>
-    )
-}
-
-function Effects() {
-    const effects = useControls('Effects', {
-        bloom: folder({
-            luminanceThreshold: 0.5,
-            luminanceSmoothing: 5,
-            height: 500,
-            bOpacity: 0.5,
-        }, { collapsed: true }),
-        noise: folder({
-            nOpacity: 0.1,
-        }, { collapsed: true }),
-        scanline: folder({
-            density: 1,
-            sOpacity: 0.2,
-        }, { collapsed: true }),
-    }, { collapsed: true });
-
-    useFrame((_, delta) => {
-        effects.nOpacity = Math.abs(Math.sin(delta * 0.5)) * 0.1;
-    });
-
-    return (
-        <EffectComposer>
-            <Bloom 
-                luminanceThreshold={effects.luminanceThreshold}
-                luminanceSmoothing={effects.luminanceSmoothing}
-                height={effects.height}
-                opacity={effects.bOpacity}
-            />
-            <Noise opacity={effects.nOpacity} />
-            <Scanline density={1} opacity={effects.sOpacity}/>
-        </EffectComposer>
+        </>
     )
 }
 
@@ -83,6 +34,8 @@ function Buttons() {
     const [positions, setPositions] = useState<[number, number, number][]>(BUTTONS.map(() => [0, 0, 0]));
     const [rotations, setRotations] = useState<[number, number, number][]>(BUTTONS.map(() => [0, 0, 0]));
     const refs = Array.from({ length: BUTTONS.length }, () => useRef<Mesh>(null));
+
+    const go = useSceneNavigation((state) => state.go);
 
     const controls = useControls('Buttons', {
         distance: 1.7,
@@ -162,7 +115,7 @@ function Buttons() {
                     rotation={rotations[index]}
                     fontSize={controls.buttonSize}
                     color={controls.color}
-                    onClick={button.action}
+                    onClick={() => go("test")}
                     onPointerEnter={(e) => pointerEnter(e, index)}
                     onPointerLeave={(e) => pointerLeave(e, index)}
                     ref={refs[index]}
@@ -174,3 +127,15 @@ function Buttons() {
         </>
     )
 }
+
+const scene = new Scene({
+    path: "/",
+    id: "index",
+    name: "Index",
+    description: "Index scene",
+    scene: <Index key="index"/>,
+    cameraPosition: [0, 0, 6],
+    cameraRotation: [0, 0, 0],
+})
+
+export default scene;
