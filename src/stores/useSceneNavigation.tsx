@@ -50,6 +50,7 @@ interface SceneNavigationStore {
     transitionTime: number;
     isTransitioning: boolean;
     transitioningScene: Scene | null;
+    tweens: gsap.core.Tween[];
 
     go: (sceneId: string, option?: GoSceneOptions) => void;
     next: () => void;
@@ -72,46 +73,52 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
     transitionTime: 2,
     isTransitioning: false,
     transitioningScene: null,
+    tweens: [],
 
     go: (sceneId: string, options: GoSceneOptions = { createHistory: true }) => {
         const { scenes, cameraRef, transitionTime, currentScene } = get();
 
         let tTime = options.transitionTime ?? transitionTime;
 
-        if(sceneId === currentScene?.id) {
-            console.warn(`Already in scene ${sceneId}.`);
-            return;
-        }
-
         const scene = scenes[sceneId];
         if(!scene) {
             console.warn(`Scene with id ${sceneId} not found.`);
             return;
         }
-
-        set({ transitioningScene: scene, isTransitioning: true });
+    
+        if(currentScene?.id !== sceneId) {
+            set({ transitioningScene: scene, isTransitioning: true });
+        }
         
         const { cameraPosition, cameraRotation } = scene;
         if (cameraRef.current) {
-            gsap.to(cameraRef.current.position, {
+            const positionTween = gsap.to(cameraRef.current.position, {
                 x: cameraPosition[0],
                 y: cameraPosition[1],
                 z: cameraPosition[2],
                 duration: tTime,
                 ease: "power3.out",
                 onComplete: () => {
-                    set({ currentScene: scene, currentScenePath: scene.path, isTransitioning: false });
+                    set({ 
+                        currentScene: scene, 
+                        currentScenePath: scene.path, 
+                        isTransitioning: false,
+                        transitioningScene: null,
+                        tweens: [],
+                    });
                 }
             });
-            gsap.to(cameraRef.current.rotation, {
+            const rotationTween = gsap.to(cameraRef.current.rotation, {
                 x: cameraRotation[0],
                 y: cameraRotation[1],
                 z: cameraRotation[2],
                 duration: tTime,
                 ease: "power3.out",
             });
+
+            set({ tweens: [positionTween, rotationTween] });
         } else {
-            set({ currentScene: scene, currentScenePath: scene.path, isTransitioning: false });
+            set({ currentScene: scene, currentScenePath: scene.path, isTransitioning: false, transitioningScene: null });
         }
 
         const historyData: SceneHistoryState = {
@@ -165,9 +172,14 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
 }));
 
 window.addEventListener("popstate", (e) => {
+    const { go, tweens } = useSceneNavigation.getState();
     const { scene } = e.state as SceneHistoryState;
+
+    if(tweens.length) {
+        tweens.forEach((tween) => tween.kill());
+        useSceneNavigation.setState({ tweens: [], isTransitioning: false, transitioningScene: null });
+    }
     
-    const { go } = useSceneNavigation.getState();
     if(scene.id) {
         go(scene.id, { createHistory: false });
     } else {
