@@ -100,6 +100,10 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
         AudioManager.mute();
         set({ canSpeak: false });
     },
+    unmute: () => {
+        AudioManager.unmute();
+        set({ canSpeak: true });
+    },
 }));
 
 function shake(ref: RefObject<Mesh | null>, duration: number = 0.1, intensity: number = 0.1) {

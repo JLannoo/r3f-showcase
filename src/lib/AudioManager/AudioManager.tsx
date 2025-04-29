@@ -51,6 +51,11 @@ class AudioManager {
         this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
     }
 
+    public unmute() {
+        this.isMuted = false;
+        this.gainNode.gain.setValueAtTime(1, this.audioContext.currentTime);
+    }
+
     public playEffect(effect: AudioEffect) {
         if (this.isMuted) return;
 
