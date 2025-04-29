@@ -1,12 +1,14 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, Stats, Text } from "@react-three/drei";
+import { PerspectiveCamera, Stats } from "@react-three/drei";
 import { Bloom, EffectComposer, Noise, Scanline } from "@react-three/postprocessing";
 import { folder, Leva, useControls } from "leva";
 
 import Background from "./components/Background/Background";
+import StoreMonitor from "./components/StoreMonitor/StoreMonitor";
+
 import { useSceneNavigation } from "./stores/useSceneNavigation";
 
 import { registerScenes } from "./scenes";
@@ -15,10 +17,10 @@ registerScenes();
 const root = createRoot(document.getElementById("app")!);
 
 root.render(
-	<>
+	<StrictMode>
 		<base href={import.meta.env.BASE_URL}></base>
 		<App />
-	</>
+	</StrictMode>
 );
 
 function App() {
@@ -31,7 +33,7 @@ function App() {
 		ambientLight: folder({
 			intensity: 5,
 		}, { collapsed: true }),
-	}, { collapsed: true });	
+	}, { collapsed: true });
 
 	return (
 		<>
@@ -51,10 +53,12 @@ function App() {
 				{/* 
 					scene component `key` is required to 
 					prevent re-render when transitioning scenes.
-				*/}
+					*/}
 				{currentScene?.scene}
 				{isTransitioning && transitioningScene?.scene}
 			</Canvas>
+			
+			<StoreMonitor title="Scene Navigation" store={useSceneNavigation} />
 		</>
 	)
 }
