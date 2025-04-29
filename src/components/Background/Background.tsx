@@ -1,5 +1,3 @@
-import { Text } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
 import { useControls } from 'leva';
 import { useEffect, useState } from 'react';
 import { Texture } from 'three';
@@ -63,7 +61,7 @@ export default function Background() {
             .map(() => randomChar())
             .join('')
     )
-        
+
     useEffect(() => {
         const interval = setInterval(() => {            
             setText((prevText) => {
@@ -96,10 +94,17 @@ export default function Background() {
                 <planeGeometry args={[25, 25]} />
                 <meshBasicMaterial color={controls.backgroundColor}/>
             </mesh>
-            <mesh position={[0, 0, 0.01]}>
+            {/* 
+                The conditional rendering forces the component to at least render the plain background.
+                Otherwise, the component will wait for the texture to be created.
+                If it is not added on the first render of <App /> the renderer will never take its updates into account.
+            */}
+            {texture && (
+                <mesh position={[0, 0, 0.01]}>
                 <planeGeometry args={[25, 25]} />
                 <meshBasicMaterial map={texture} transparent={true}/>
             </mesh>
+            )}
         </group>
     );
 }
