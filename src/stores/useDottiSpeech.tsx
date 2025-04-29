@@ -33,7 +33,6 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
     fullText: "",
     interval: null,
     speed: 100,
-    queue: [],
     shakeRef: createRef(),
 
     speak: async (text: string, options?: SpeechOptions) => {

@@ -7,9 +7,10 @@ import { Html, Text } from '@react-three/drei';
 import { ThreeEvent, useFrame } from '@react-three/fiber';
 
 import Dotti from '../../components/Dotti/Dotti';
+import StoreMonitor from '../../components/StoreMonitor/StoreMonitor';
+
 import { Scene, useSceneNavigation } from '../../stores/useSceneNavigation';
-import DottiMonitor from '../../components/Dotti/DottiMonitor';
-import { log } from 'three/webgpu';
+import { useDottiSpeech } from '../../stores/useDottiSpeech';
 
 const BUTTONS = [
     { label: "Button 1", action: () => console.log('Button 1 clicked') },
@@ -21,8 +22,8 @@ const BUTTONS = [
 function Index() {
     return (
         <>
-            <Html fullscreen style={{ pointerEvents: 'none' }}>
-                <DottiMonitor />
+            <Html fullscreen pointerEvents='none' className='pointer-events-none'>
+                <StoreMonitor title="Dotti" store={useDottiSpeech} className='left-60' />
             </Html>
             <Dotti />
             <Buttons />
