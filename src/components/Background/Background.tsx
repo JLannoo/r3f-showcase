@@ -1,6 +1,8 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Group, Texture } from 'three';
+import { useFrame } from '@react-three/fiber';
+
 import { useControls } from 'leva';
-import { useEffect, useState } from 'react';
-import { Texture } from 'three';
 
 const AVAILABLE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?';
 
@@ -46,6 +48,8 @@ function renderToTexture(text: string, sizeX: number, sizeY: number, rows: numbe
 export default function Background() {
     const [texture, setTexture] = useState<Texture>(null!);
 
+    const ref = useRef<Group>(null!);
+
     const controls = useControls('Background', {
         backgroundColor: '#050505',
         textColor: '#0e0e0e',
@@ -70,7 +74,7 @@ export default function Background() {
         }, controls.replaceTime);
 
         return () => clearInterval(interval);
-    }, [controls]);
+    }, [controls]);     
 
     useEffect(() => {
         const newTexture = renderToTexture(
@@ -88,10 +92,20 @@ export default function Background() {
         };
     }, [text]);    
 
+    const plane = useMemo(() => <planeGeometry args={[25, 25]} />, []);
+
+    useFrame((state) => {
+        const { camera } = state;
+        if(ref.current) {
+            ref.current.position.set(camera.position.x, camera.position.y, camera.position.z);
+            ref.current.rotation.set(camera.rotation.x, camera.rotation.y, camera.rotation.z);
+        }
+    });
+
     return (
-        <group position={[0, 0, -10]}>
-            <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[25, 25]} />
+        <group ref={ref}>
+            <mesh position={[0, 0, -18]}>
+                {plane}
                 <meshBasicMaterial color={controls.backgroundColor}/>
             </mesh>
             {/* 
@@ -100,8 +114,8 @@ export default function Background() {
                 If it is not added on the first render of <App /> the renderer will never take its updates into account.
             */}
             {texture && (
-                <mesh position={[0, 0, 0.01]}>
-                <planeGeometry args={[25, 25]} />
+                <mesh position={[0, 0, -17.99]}>
+                {plane}
                 <meshBasicMaterial map={texture} transparent={true}/>
             </mesh>
             )}
