@@ -1,31 +1,34 @@
 import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
-import react from "eslint-plugin-react";
+import tsParser from "@typescript-eslint/parser";
 
-export default [
+import r3f from "@react-three/eslint-plugin";
+import react from "eslint-plugin-react";
+import ts from "@typescript-eslint/eslint-plugin";
+
+
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
 	{
-		files: ["**/*.{js,mjs,cjs,ts}"]
-	},
-	{
-		languageOptions: { 
-			globals: globals.browser 
-		}
-	},
-	pluginJs.configs.recommended,
-	...tseslint.configs.recommended,
-	{
-		plugins: [
-			react
-		],
-		extends: ["esling:all", "plugin:react/recommended"],
+		files: ["**/*.{js,mjs,cjs,ts,tsx,jsx}"],
+		languageOptions: {
+			globals: globals.browser,
+			parser: tsParser,
+		},
+		plugins: {
+			"@react-three": r3f,
+			"@typescript-eslint": ts,
+			"react": react,
+		},
 		rules: {
-			// Always semis
-			"semi": ["error", "always"],
-			// Always double quotes
-			"quotes": ["error", "double"],
-			// Tab indentation
+			// Custom rules
 			"indent": ["error", "tab"],
-		}
-	}
-];
+			"no-trailing-spaces": "error",
+			"quotes": ["error", "double"],
+			"semi": ["error", "always"],
+
+			// React Specific
+			"react/react-in-jsx-scope": "off",
+		},
+	},
+]);

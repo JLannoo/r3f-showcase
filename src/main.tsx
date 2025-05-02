@@ -29,7 +29,7 @@ function App() {
 	const isTransitioning = useSceneNavigation((state) => state.isTransitioning);
 	const transitioningScene = useSceneNavigation((state) => state.transitioningScene);
 
-	const lighting = useControls('Lighting', {
+	const lighting = useControls("Lighting", {
 		ambientLight: folder({
 			intensity: 5,
 		}, { collapsed: true }),
@@ -41,7 +41,7 @@ function App() {
 
 			<Stats />
 
-			<Canvas style={{ height: '100vh', width: '100vw' }}>
+			<Canvas style={{ height: "100vh", width: "100vw" }}>
 				<ambientLight intensity={lighting.intensity} />
 
 				<Background />
@@ -49,22 +49,22 @@ function App() {
 				<PerspectiveCamera position={[0, 0, 6]} makeDefault ref={cameraRef}/>
 
 				<Effects />
-				
-				{/* 
-					scene component `key` is required to 
+
+				{/*
+					scene component `key` is required to
 					prevent re-render when transitioning scenes.
 					*/}
 				{currentScene?.scene}
 				{isTransitioning && transitioningScene?.scene}
 			</Canvas>
-			
+
 			<StoreMonitor title="Scene Navigation" store={useSceneNavigation} />
 		</>
-	)
+	);
 }
 
 function Effects() {
-	const effects = useControls('Effects', {
+	const effects = useControls("Effects", {
 		bloom: folder({
 			luminanceThreshold: 0.5,
 			luminanceSmoothing: 5,
@@ -86,7 +86,7 @@ function Effects() {
 
 	return (
 		<EffectComposer>
-			<Bloom 
+			<Bloom
 				luminanceThreshold={effects.luminanceThreshold}
 				luminanceSmoothing={effects.luminanceSmoothing}
 				height={effects.height}
@@ -95,5 +95,5 @@ function Effects() {
 			<Noise opacity={effects.nOpacity} />
 			<Scanline density={1} opacity={effects.sOpacity}/>
 		</EffectComposer>
-	)
+	);
 }
