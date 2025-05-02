@@ -172,12 +172,18 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
 }));
 
 window.addEventListener("popstate", (e) => {
-    const { go, tweens } = useSceneNavigation.getState();
+    const { go, tweens, transitioningScene } = useSceneNavigation.getState();
     const { scene } = e.state as SceneHistoryState;
 
     if(tweens.length) {
         tweens.forEach((tween) => tween.kill());
-        useSceneNavigation.setState({ tweens: [], isTransitioning: false, transitioningScene: null });
+        useSceneNavigation.setState({
+            tweens: [],
+            isTransitioning: false,
+            transitioningScene: null,
+            currentScene: transitioningScene,
+            currentScenePath: transitioningScene?.path ?? "/",
+        });
     }
     
     if(scene.id) {
