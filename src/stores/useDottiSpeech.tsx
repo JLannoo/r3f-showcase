@@ -5,15 +5,23 @@ import gsap from "gsap";
 
 import AudioManager from "../lib/AudioManager/AudioManager";
 
+type DottiEmotion = "IDLE" | "HAPPY" | "SAD" | "ANGRY" | "SURPRISED" | "CONFUSED";
+
 type SpeechOptions = {
     speed?: number;
     waitStart?: number;
     waitEnd?: number;
+    emotion?: DottiEmotion;
+}
+
+const DEFAULT_OPTIONS: SpeechOptions = {
+    emotion: "IDLE",
 }
 
 interface DottiSpeechStore {
     canSpeak: boolean;
     isSpeaking: boolean;
+    emotion: DottiEmotion;
     partialText: string;
     fullText: string;
     interval: number | null;
@@ -24,18 +32,20 @@ interface DottiSpeechStore {
     speak: (text: string, options?: SpeechOptions) => Promise<void>;
     wait: (ms: number) => Promise<void>;
     mute: () => void;
+    unmute: () => void;
 }
 
 export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
     canSpeak: false,
     isSpeaking: false,
+    emotion: "IDLE",
     partialText: "",
     fullText: "",
     interval: null,
     speed: 100,
     shakeRef: createRef(),
 
-    speak: async (text: string, options?: SpeechOptions) => {
+    speak: async (text: string, options: SpeechOptions = DEFAULT_OPTIONS) => {
         return new Promise<void>(async (resolve) => {
             // If the AudioManager is not able to play, show a message and wait for user interaction
             if(!AudioManager.isAbleToPlay()) {    
@@ -84,7 +94,7 @@ export const useDottiSpeech = create<DottiSpeechStore>((set, get) => ({
                 }
             }, options?.speed ?? get().speed);
             
-            set({ isSpeaking: true, fullText: text, partialText: "", interval: interval });
+            set({ isSpeaking: true, fullText: text, partialText: "", interval: interval, emotion: options?.emotion ?? "IDLE" });
 
         });
     },

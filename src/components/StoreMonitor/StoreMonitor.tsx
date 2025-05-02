@@ -1,4 +1,3 @@
-import { Html } from "@react-three/drei";
 import { StoreApi, UseBoundStore } from "zustand";
 
 type StoreMonitorProps<T> = {

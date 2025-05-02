@@ -11,11 +11,14 @@ import { useDottiSpeech } from "../../stores/useDottiSpeech";
 export default function Dotti() {
     const text = useDottiSpeech((state) => state.partialText);
     const speak = useDottiSpeech((state) => state.speak);
+    const mute = useDottiSpeech((state) => state.mute);
     const shakeRef = useDottiSpeech((state) => state.shakeRef);
+    const emotion = useDottiSpeech((state) => state.emotion);
 
     useEffect(() => {
         const intro = async () => {
-            await speak("Hello! I'm Dotti.", { waitEnd: 1000 });            
+            mute();
+            await speak("Hello! I'm Dotti.", { waitEnd: 1000 });
             await speak("Welcome to my world!");
         }   
 
@@ -96,7 +99,26 @@ export default function Dotti() {
         controls.eyeSpacing + Math.PI / 2
     ), [controls.eyeHeight, controls.eyeSpacing]);
 
+    const eyeGeometry = useMemo(() => {
+        switch (emotion) {
+            case "HAPPY": // ^ ^
+                return <Text fontSize={0.6} anchorX="center" anchorY="middle" textAlign="center" position={[0, 0, 0]} maxWidth={8}>^</Text>;
+            case "SAD": // . .
+                return <ringGeometry args={[0.1, 0.15, controls.segments]} />;
+            case "ANGRY": // > <
+                return <Text fontSize={0.6} anchorX="center" anchorY="middle" textAlign="center" position={[0, 0, 0]} maxWidth={8}>&lt;</Text>;
+            case "SURPRISED": // O O
+                return <ringGeometry args={[0.1, 0.2, controls.segments]} />;
+            case "IDLE": // o o
+                return <ringGeometry args={[0.1, 0.15, controls.segments]} />;
+        }
+    }, [emotion, controls.segments]);
+
+    const eyeMaterial = useMemo(() => <meshStandardMaterial color={controls.color} wireframe />, [controls.color]);
+
     function blink() {
+        if(emotion !== "IDLE") return;
+
         gsap.to(eye1Ref.current.scale, {
             y: 0.1,
             duration: controls.blinkDuration,
@@ -154,12 +176,12 @@ export default function Dotti() {
                 />
             </mesh>
             <mesh position={eye1Position} ref={eye1Ref}>
-                <ringGeometry args={[0.1, 0.15, controls.segments]} />
-                <meshStandardMaterial color={controls.color}  wireframe/>
+                {eyeGeometry}
+                {eyeMaterial}
             </mesh>
-            <mesh position={eye2Position} ref={eye2Ref}>
-                <ringGeometry args={[0.1, 0.15, controls.segments]} />
-                <meshStandardMaterial color={controls.color} wireframe/>
+            <mesh position={eye2Position} ref={eye2Ref} scale={[-1, 1, 1]}>
+                {eyeGeometry}
+                {eyeMaterial}
             </mesh>
 
             <Speech text={text}/>
