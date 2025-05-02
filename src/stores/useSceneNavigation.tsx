@@ -76,7 +76,7 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
     tweens: [],
 
     go: (sceneId: string, options: GoSceneOptions = { createHistory: true }) => {
-        const { scenes, cameraRef, transitionTime, currentScene } = get();
+        const { scenes, cameraRef, transitionTime, currentScene, tweens } = get();
 
         let tTime = options.transitionTime ?? transitionTime;
 
@@ -89,6 +89,12 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
         if(currentScene?.id !== sceneId) {
             set({ transitioningScene: scene, isTransitioning: true });
         }
+
+        if(tweens.length) {
+            tweens.forEach((tween) => tween.kill());
+            set({ tweens: [] });
+        }
+
         
         const { cameraPosition, cameraRotation } = scene;
         if (cameraRef.current) {
@@ -172,7 +178,7 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
 }));
 
 window.addEventListener("popstate", (e) => {
-    const { go, tweens, transitioningScene } = useSceneNavigation.getState();
+    const { go, tweens, transitioningScene, currentScene } = useSceneNavigation.getState();
     const { scene } = e.state as SceneHistoryState;
 
     if(tweens.length) {
@@ -180,7 +186,7 @@ window.addEventListener("popstate", (e) => {
         useSceneNavigation.setState({
             tweens: [],
             isTransitioning: false,
-            transitioningScene: null,
+            transitioningScene: currentScene,
             currentScene: transitioningScene,
             currentScenePath: transitioningScene?.path ?? "/",
         });
