@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Mesh } from "three";
+import { Mesh, MeshStandardMaterial } from "three";
 import gsap from "gsap";
 
 import { useFrame } from "@react-three/fiber";
@@ -42,6 +42,7 @@ export default function Dotti() {
 			blinkDuration: 0.1,
 			bobbingAmplitude: 0.04,
 			bobbingFrequency: 3,
+			emotion: { options: ["HAPPY", "SAD", "ANGRY", "SURPRISED", "IDLE"], value: null },
 		}, { collapsed: true }),
 	}, { collapsed: true });
 
@@ -100,7 +101,7 @@ export default function Dotti() {
 	), [controls.eyeHeight, controls.eyeSpacing]);
 
 	const eyeGeometry = useMemo(() => {
-		switch (emotion) {
+		switch (controls.emotion ?? emotion) {
 		case "HAPPY": // ^ ^
 			return <Text fontSize={0.6} anchorX="center" anchorY="middle" textAlign="center" position={[0, 0, 0]} maxWidth={8}>^</Text>;
 		case "SAD": // . .
@@ -112,9 +113,13 @@ export default function Dotti() {
 		case "IDLE": // o o
 			return <ringGeometry args={[0.1, 0.15, controls.segments]} />;
 		}
-	}, [emotion, controls.segments]);
+	}, [emotion, controls.emotion, controls.segments]);
 
-	const eyeMaterial = useMemo(() => <meshStandardMaterial color={controls.color} wireframe />, [controls.color]);
+	const eyeMaterial = useMemo(() => new MeshStandardMaterial({
+		name: "Dotti_Eyes",
+		color: controls.color,
+		wireframe: true,
+	}), [controls.color]);
 
 	function blink() {
 		if(emotion !== "IDLE") return;
@@ -169,19 +174,19 @@ export default function Dotti() {
 			<mesh ref={shakeRef}>
 				<sphereGeometry args={[controls.radius, controls.segments, controls.segments]}/>
 				<meshStandardMaterial
+					name="Dotti_Body"
 					color={controls.color}
 					wireframe={controls.wireframe}
 					transparent={true}
 					opacity={controls.opacity}
 				/>
 			</mesh>
-			<mesh position={eye1Position} ref={eye1Ref}>
+			<mesh position={eye1Position} ref={eye1Ref} material={eyeMaterial}>
 				{eyeGeometry}
-				{eyeMaterial}
+
 			</mesh>
-			<mesh position={eye2Position} ref={eye2Ref} scale={[-1, 1, 1]}>
+			<mesh position={eye2Position} ref={eye2Ref} scale={[-1, 1, 1]} material={eyeMaterial}>
 				{eyeGeometry}
-				{eyeMaterial}
 			</mesh>
 
 			<Speech text={text}/>

@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Mesh } from "three";
+import { useMemo, useRef, useState } from "react";
+import { Mesh, MeshStandardMaterial } from "three";
 import gsap from "gsap";
 
 import { useControls } from "leva";
@@ -105,6 +105,12 @@ function Buttons() {
 		});
 	}
 
+	const textMaterial = useMemo(() => new MeshStandardMaterial({
+		color: 0xffffff,
+		emissive: 0xffffff,
+		emissiveIntensity: 0.001,
+	}), []);
+
 	return (
 		<>
 			{BUTTONS.map((button, index) => {
@@ -120,9 +126,9 @@ function Buttons() {
 					onPointerEnter={(e) => pointerEnter(e, index)}
 					onPointerLeave={(e) => pointerLeave(e, index)}
 					ref={refs[index]}
+					material={textMaterial}
 				>
 					{button.label}
-					<meshStandardMaterial color="white" emissive={[255,255,255]} emissiveIntensity={0.001} />
 				</Text>;
 			})}
 		</>
