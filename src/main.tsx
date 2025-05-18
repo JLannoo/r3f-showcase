@@ -2,14 +2,16 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, Stats } from "@react-three/drei";
+import { PerspectiveCamera } from "@react-three/drei";
 import { Bloom, EffectComposer, Noise, Scanline } from "@react-three/postprocessing";
 import { folder, Leva, useControls } from "leva";
+import { Perf } from "r3f-perf";
 
-import Background from "./components/Background/Background";
 import StoreMonitor from "./components/StoreMonitor/StoreMonitor";
 
 import { useSceneNavigation } from "./stores/useSceneNavigation";
+
+import useBackground from "./hooks/useBackground";
 
 import { registerScenes } from "./scenes";
 registerScenes();
@@ -39,12 +41,10 @@ function App() {
 		<>
 			<Leva oneLineLabels={true} />
 
-			<Stats />
+			<Canvas style={{ height: "100dvh", width: "100dvw" }}>
+				<Perf position="top-left" showGraph deepAnalyze />
 
-			<Canvas style={{ height: "100vh", width: "100vw" }}>
 				<ambientLight intensity={lighting.intensity} />
-
-				<Background />
 
 				<PerspectiveCamera position={[0, 0, 6]} makeDefault ref={cameraRef}/>
 
@@ -53,7 +53,7 @@ function App() {
 				{/*
 					scene component `key` is required to
 					prevent re-render when transitioning scenes.
-					*/}
+				*/}
 				{currentScene?.scene}
 				{isTransitioning && transitioningScene?.scene}
 			</Canvas>
@@ -64,6 +64,8 @@ function App() {
 }
 
 function Effects() {
+	useBackground();
+
 	const effects = useControls("Effects", {
 		bloom: folder({
 			luminanceThreshold: 0.5,

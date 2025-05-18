@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Group, Texture } from "three";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useRef, useState } from "react";
+import { Texture } from "three";
+import { useThree } from "@react-three/fiber";
 
 import { useControls } from "leva";
 
@@ -19,13 +19,14 @@ function replaceRandomChars(text: string, quantity: number) {
 	return charArray.join("");
 }
 
-function renderToTexture(text: string, sizeX: number, sizeY: number, rows: number, cols: number, color: string) {
+function renderToTexture(text: string, sizeX: number, sizeY: number, rows: number, cols: number, color: string, backgroundColor: string) {
 	const canvas = document.createElement("canvas");
 	canvas.width = sizeX;
 	canvas.height = sizeY;
 	const ctx = canvas.getContext("2d")!;
 
-	ctx.clearRect(0, 0, sizeX, sizeY);
+	ctx.fillStyle = backgroundColor;
+	ctx.fillRect(0, 0, sizeX, sizeY);
 
 	ctx.fillStyle = color;
 	ctx.font = `${sizeY/rows}px Space Mono`;
@@ -42,17 +43,27 @@ function renderToTexture(text: string, sizeX: number, sizeY: number, rows: numbe
 
 	const texture = new Texture(canvas);
 	texture.needsUpdate = true;
+	texture.colorSpace = "srgb";
 	return texture;
 }
 
-export default function Background() {
+/**
+ * Custom hook to create a dynamic background texture
+ * that updates with random characters.
+ *
+ * Has `Leva` controls for customization.
+ */
+export default function useBackground() {
 	const [texture, setTexture] = useState<Texture>(null!);
 
-	const ref = useRef<Group>(null!);
+	const aspect = useRef<number>(1);
+
+	const { scene } = useThree();
 
 	const controls = useControls("Background", {
 		backgroundColor: "#050505",
 		textColor: "#0e0e0e",
+		resolution: 512,
 		characterCols: 60,
 		characterRows: 40,
 		replaceQuantity: 100,
@@ -73,52 +84,47 @@ export default function Background() {
 			});
 		}, controls.replaceTime);
 
-		return () => clearInterval(interval);
+		return () => {
+			clearInterval(interval);
+			texture?.dispose();
+			scene.background = null;
+		};
 	}, [controls]);
 
 	useEffect(() => {
 		const newTexture = renderToTexture(
 			text,
-			512,
-			512,
+			controls.resolution * aspect.current,
+			controls.resolution,
 			controls.characterRows,
 			controls.characterCols,
 			controls.textColor,
+			controls.backgroundColor,
 		);
-		setTexture(newTexture);
+
+		setTexture((oldTexture) => {
+			oldTexture?.dispose();
+			return newTexture;
+		});
 
 		return () => {
 			texture?.dispose();
 		};
 	}, [text]);
 
-	const plane = useMemo(() => <planeGeometry args={[25, 25]} />, []);
+	useEffect(() => {
+		const onResize = () => {
+			const newAspect = window.innerWidth / window.innerHeight;
+			if (aspect.current) {
+				aspect.current = newAspect;
+			}
+		};
 
-	useFrame((state) => {
-		const { camera } = state;
-		if(ref.current) {
-			ref.current.position.set(camera.position.x, camera.position.y, camera.position.z);
-			ref.current.rotation.set(camera.rotation.x, camera.rotation.y, camera.rotation.z);
-		}
-	});
+		window.addEventListener("resize", onResize);
+		return () => window.removeEventListener("resize", onResize);
+	}, []);
 
-	return (
-		<group ref={ref}>
-			<mesh position={[0, 0, -18]}>
-				{plane}
-				<meshBasicMaterial color={controls.backgroundColor}/>
-			</mesh>
-			{/*
-                The conditional rendering forces the component to at least render the plain background.
-                Otherwise, the component will wait for the texture to be created.
-                If it is not added on the first render of <App /> the renderer will never take its updates into account.
-            */}
-			{texture && (
-				<mesh position={[0, 0, -17.99]}>
-					{plane}
-					<meshBasicMaterial map={texture} transparent={true}/>
-				</mesh>
-			)}
-		</group>
-	);
+	useEffect(() => {
+		scene.background = texture;
+	}, [texture]);
 }
