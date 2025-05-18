@@ -116,7 +116,7 @@ function Buttons() {
 					rotation={rotations[index]}
 					fontSize={controls.buttonSize}
 					color={controls.color}
-					onClick={() => go("test")}
+					onClick={() => go("/test")}
 					onPointerEnter={(e) => pointerEnter(e, index)}
 					onPointerLeave={(e) => pointerLeave(e, index)}
 					ref={refs[index]}
@@ -131,7 +131,6 @@ function Buttons() {
 
 const scene = new Scene({
 	path: "/",
-	id: "index",
 	name: "Index",
 	description: "Index scene",
 	scene: <Index key="index"/>,

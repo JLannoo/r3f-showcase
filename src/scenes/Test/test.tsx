@@ -15,11 +15,10 @@ function Test() {
 }
 
 const scene = new Scene({
-	id: "test",
+	path: "/test",
 	scene: <Test key="test"/>,
 	name: "Test",
 	description: "Test",
-	path: "/test",
 	cameraPosition: [SCENE_POSITION.x, 0, 6],
 	cameraRotation: [0, 0, 0],
 });

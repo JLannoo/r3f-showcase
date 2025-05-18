@@ -4,7 +4,6 @@ import { PerspectiveCamera } from "three";
 import { create } from "zustand";
 
 type SceneOptions = {
-    id: string;
     scene: ReactNode;
     name: string;
     description: string;
@@ -16,12 +15,11 @@ type SceneOptions = {
 
 type SceneHistoryState = {
     scene: {
-        id: string;
+        path: string;
     }
 }
 
 export class Scene {
-	id: string;
 	scene: ReactNode;
 	name: string;
 	description: string;
@@ -31,7 +29,6 @@ export class Scene {
 	cameraPosition: [number, number, number];
 
 	constructor(options: SceneOptions) {
-		this.id = options.id;
 		this.scene = options.scene;
 		this.name = options.name;
 		this.description = options.description;
@@ -66,7 +63,7 @@ type GoSceneOptions = {
 
 
 export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
-	currentScenePath: "/",
+	currentScenePath: window.location.pathname || "/",
 	currentScene: null,
 	scenes: {},
 	cameraRef: createRef<PerspectiveCamera>(),
@@ -75,18 +72,19 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
 	transitioningScene: null,
 	tweens: [],
 
-	go: (sceneId: string, options: GoSceneOptions = { createHistory: true }) => {
-		const { scenes, cameraRef, transitionTime, currentScene, tweens } = get();
+	go: (scenePath: string, options: GoSceneOptions = { createHistory: true }) => {
+		const { scenes, cameraRef, transitionTime, currentScene, tweens, go } = get();
 
 		let tTime = options.transitionTime ?? transitionTime;
 
-		const scene = scenes[sceneId];
+		const scene = scenes[scenePath];
+
 		if(!scene) {
-			console.warn(`Scene with id ${sceneId} not found.`);
+			console.warn(`Scene at ${scenePath} not found.`);
 			return;
 		}
 
-		if(currentScene?.id !== sceneId) {
+		if(currentScene?.path !== scenePath) {
 			set({ transitioningScene: scene, isTransitioning: true });
 		}
 
@@ -124,55 +122,61 @@ export const useSceneNavigation = create<SceneNavigationStore>((set, get) => ({
 
 			set({ tweens: [positionTween, rotationTween] });
 		} else {
-			set({ currentScene: scene, currentScenePath: scene.path, isTransitioning: false, transitioningScene: null });
+			// Wait for scene to load
+			setTimeout(() => {
+				go(scenePath, { createHistory: options.createHistory, transitionTime: tTime });
+			}, 1000);
+			return;
 		}
 
 		const historyData: SceneHistoryState = {
 			scene: {
-				id: sceneId,
+				path: scenePath,
 			},
 		};
 
 		if(options?.createHistory) {
 			history.pushState(historyData, "", scene.path);
 		}
-		document.title = scenes[sceneId].name;
+		document.title = scenes[scenePath].name;
 		document.body.style.cursor = "auto";
 	},
 	next: () => {
 		const { currentScene, scenes, go } = get();
 		const sceneKeys = Object.keys(scenes);
-		const currentSceneIndex = sceneKeys.findIndex((key) => scenes[key].id === currentScene?.id);
+		const currentSceneIndex = sceneKeys.findIndex((key) => scenes[key].path === currentScene?.path);
 		const nextIndex = (currentSceneIndex + 1) % sceneKeys.length;
 		const nextScene = scenes[sceneKeys[nextIndex]];
 
-		go(nextScene.id);
+		go(nextScene.path);
 	},
 	previous: () => {
 		const { currentScene, scenes, go } = get();
 		const sceneKeys = Object.keys(scenes);
-		const currentSceneIndex = sceneKeys.findIndex((key) => scenes[key].id === currentScene?.id);
+		const currentSceneIndex = sceneKeys.findIndex((key) => scenes[key].path === currentScene?.path);
 		const previousIndex = (currentSceneIndex - 1 + sceneKeys.length) % sceneKeys.length;
 		const previousScene = scenes[sceneKeys[previousIndex]];
 
-		go(previousScene.id);
+		go(previousScene.path);
 	},
 
 	registerScene: (scene: Scene) => {
-		const { scenes, go } = get();
+		const { currentScenePath, scenes, go } = get();
 
-		console.log(`Registering scene '${scene.name}' with id ${scene.id} at path ${scene.path}`);
+		console.log(`Registering scene '${scene.name}' at ${scene.path}`);
 
-		if (scenes[scene.id]) {
-			console.warn(`Scene with id ${scene.id} already exists. Overwriting.`);
+		if (scenes[scene.path]) {
+			console.warn(`Scene with path ${scene.path} already exists. Overwriting.`);
 		}
 
-		set({ scenes: { ...scenes, [scene.id]: scene } });
+		set({ scenes: { ...scenes, [scene.path]: scene } });
 
 		// First render
-		if(Object.keys(get().scenes).length === 1) {
-			history.replaceState({ scene: { id: scene.id } }, "", scene.path);
-			go(scene.id, { createHistory: false, transitionTime: 0 });
+		if(currentScenePath == "/" && Object.keys(get().scenes).length === 1) {
+			history.replaceState({ scene: { path: scene.path } }, "", scene.path);
+			go(scene.path, { createHistory: false, transitionTime: 0 });
+		} else if(currentScenePath === scene.path) {
+			go(scene.path, { createHistory: false, transitionTime: 0 });
 		}
 	},
 }));
@@ -192,8 +196,8 @@ window.addEventListener("popstate", (e) => {
 		});
 	}
 
-	if(scene.id) {
-		go(scene.id, { createHistory: false });
+	if(scene.path) {
+		go(scene.path, { createHistory: false });
 	} else {
 		go("/", { createHistory: false });
 	}
